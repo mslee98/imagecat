@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="assets/fonts/nanumsquareround.min.css" rel="stylesheet"
+        type="text/css">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700;800&display=swap" rel="stylesheet" type="text/css">
+    <link href="css/dummy/reset.css" rel="stylesheet" type="text/css">
+    <link href="css/dummy/common.css" rel="stylesheet" type="text/css">
+    <link href="css/main/art.css" rel="stylesheet" type="text/css">
+
+	<style>
+		#cursor {
+                position: absolute;
+                left: -1000px;
+                top: -1000px;
+                z-index: 5;
+                width: 9px;
+                height: 9px;
+                background-color: #ffffff;
+                border-radius: 6px; 
+                -moz-border-radius: 6px; 
+                -webkit-border-radius: 6px;
+                border: 1px solid #ff0000; 
+            }
+	</style>
+
+</head>
+
+<body>
+
+
+
+
+    <script type="text/javascript">
+
+        function openNav() {
+            document.getElementById("mySidenav").style.width = "400px";
+            //document.getElementById("main-if-contents").style.marginLeft = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("mySidenav").style.width = "0px";
+            //document.getElementById("main-if-contents").style.marginLeft= "0";
+        }
+    </script>
+    <script id="vertexShader1" type="x-shader/x-vertex">
+  void main() {
+    gl_Position = projectionMatrix * modelViewMatrix  * vec4(position,1.0);
+  }
+</script>
+    <script id="fragmentShader1" type="x-shader/x-fragment"">
+ void main() {
+    gl_FragColor = vec4(0.0, 0.5, 1.0, 1.0); // R, G, B, A
+  }
+</script> 
+
+
+<div id="cursor"></div>
+<!-- Main Loader -->
+<div class=" wrap">
+<div id='loader-scene'>
+
+<!-- WRAPPER -->
+	<div class="wrap global">
+      <!-- loading Start -->
+      <div class="overlay">
+         <div class="vm">
+            <p><img src="/assets/images/spinner-w.svg" alt=""></p>
+            <button type="button" class="skip">Skip</button>
+         </div>
+      </div>
+      
+
+
+      <!-- loading End -->
+
+      <div class="main_content">
+         <h1 class="logo_left"><img src="/assets/images/top_logo.png" alt=""></h1>
+
+         <div class="vertical-container">
+            <div class="vertical-middle">
+               <div class="btn_area">
+	               <div id='loader-text'>
+						<span id='progress'>0%</span>
+					</div>
+                  <button type="button" id="enter">Start</button>
+                  <button type="button">Overview</button>
+               </div>
+            </div>
+         </div>
+      </div>
+	</div>
+</div>
+<div id="stats-output"></div>
+
+<!-- CanvasWrap -->
+<div id="canvasWrap">
+	<!-- Canvas -->
+	<div id='canvas-container'>
+		<div id='canvas-target'>
+			<canvas id='agicsplot-canvas' />
+		</div>
+	</div>
+	
+	<div class="textfield_holder">
+		<input class="textfield_input" type="text" id="search"
+			placeholder="Search">
+	</div>
+
+	<button id='tour'>
+		CATEGORY <span id='ripple-container' onclick="openNav()"> <span
+			id=riple></span>
+		</span>
+	</button>
+	
+	<div class="view_control" id="view_control">
+		<a href="#" class="lz" id="pan"></a> <a href="#" class="lxy" id="move"></a>
+	</div>
+	
+	<div id='label-container'>
+					<input type='checkbox' id='label-input' checked>
+					<label>Label None</label>
+	</div>
+	<!-- footer -->
+
+		<div class="ft_contents">
+			<div class="ft_left">
+				<span class="copyright">© AGICS Corp. All Rights Reserved.</span>
+			</div>
+			<div class="ft_right">
+				<div id='icons'>
+					<img id='layout-grid' src='/assets/images/az-layout.svg' /> 
+				 	<img id='layout-umap' src='/assets/images/scatter-layout.svg' /> 
+				 	<img id='layout-rasterfairy' src='/assets/images/grid-layout.svg' />
+				 	<!-- <img id='layout-video' src='/images/mvs/adm/art/rev.PNG' />	 -->
+				</div>
+				
+			
+			</div>
+		</div>
+
+</div>
+<div class="overlay_search_popup" style="display:none"><div class="vm"><svg version="1.1" 
+	class="svg-loader" 
+	xmlns="http://www.w3.org/2000/svg" 
+	xmlns:xlink="http://www.w3.org/1999/xlink" 
+	x="0px"
+	y="0px" 
+	viewBox="0 0 80 80" 
+	xml:space="preserve">
+
+<path 
+	fill="#D43B11" 
+	d="M10,40c0,0,0-0.4,0-1.1c0-0.3,0-0.8,0-1.3c0-0.3,0-0.5,0-0.8c0-0.3,0.1-0.6,0.1-0.9c0.1-0.6,0.1-1.4,0.2-2.1
+	c0.2-0.8,0.3-1.6,0.5-2.5c0.2-0.9,0.6-1.8,0.8-2.8c0.3-1,0.8-1.9,1.2-3c0.5-1,1.1-2,1.7-3.1c0.7-1,1.4-2.1,2.2-3.1
+	c1.6-2.1,3.7-3.9,6-5.6c2.3-1.7,5-3,7.9-4.1c0.7-0.2,1.5-0.4,2.2-0.7c0.7-0.3,1.5-0.3,2.3-0.5c0.8-0.2,1.5-0.3,2.3-0.4l1.2-0.1
+	l0.6-0.1l0.3,0l0.1,0l0.1,0l0,0c0.1,0-0.1,0,0.1,0c1.5,0,2.9-0.1,4.5,0.2c0.8,0.1,1.6,0.1,2.4,0.3c0.8,0.2,1.5,0.3,2.3,0.5
+	c3,0.8,5.9,2,8.5,3.6c2.6,1.6,4.9,3.4,6.8,5.4c1,1,1.8,2.1,2.7,3.1c0.8,1.1,1.5,2.1,2.1,3.2c0.6,1.1,1.2,2.1,1.6,3.1
+	c0.4,1,0.9,2,1.2,3c0.3,1,0.6,1.9,0.8,2.7c0.2,0.9,0.3,1.6,0.5,2.4c0.1,0.4,0.1,0.7,0.2,1c0,0.3,0.1,0.6,0.1,0.9
+	c0.1,0.6,0.1,1,0.1,1.4C74,39.6,74,40,74,40c0.2,2.2-1.5,4.1-3.7,4.3s-4.1-1.5-4.3-3.7c0-0.1,0-0.2,0-0.3l0-0.4c0,0,0-0.3,0-0.9
+	c0-0.3,0-0.7,0-1.1c0-0.2,0-0.5,0-0.7c0-0.2-0.1-0.5-0.1-0.8c-0.1-0.6-0.1-1.2-0.2-1.9c-0.1-0.7-0.3-1.4-0.4-2.2
+	c-0.2-0.8-0.5-1.6-0.7-2.4c-0.3-0.8-0.7-1.7-1.1-2.6c-0.5-0.9-0.9-1.8-1.5-2.7c-0.6-0.9-1.2-1.8-1.9-2.7c-1.4-1.8-3.2-3.4-5.2-4.9
+	c-2-1.5-4.4-2.7-6.9-3.6c-0.6-0.2-1.3-0.4-1.9-0.6c-0.7-0.2-1.3-0.3-1.9-0.4c-1.2-0.3-2.8-0.4-4.2-0.5l-2,0c-0.7,0-1.4,0.1-2.1,0.1
+	c-0.7,0.1-1.4,0.1-2,0.3c-0.7,0.1-1.3,0.3-2,0.4c-2.6,0.7-5.2,1.7-7.5,3.1c-2.2,1.4-4.3,2.9-6,4.7c-0.9,0.8-1.6,1.8-2.4,2.7
+	c-0.7,0.9-1.3,1.9-1.9,2.8c-0.5,1-1,1.9-1.4,2.8c-0.4,0.9-0.8,1.8-1,2.6c-0.3,0.9-0.5,1.6-0.7,2.4c-0.2,0.7-0.3,1.4-0.4,2.1
+	c-0.1,0.3-0.1,0.6-0.2,0.9c0,0.3-0.1,0.6-0.1,0.8c0,0.5-0.1,0.9-0.1,1.3C10,39.6,10,40,10,40z"
+	>
+
+	<animateTransform
+		attributeType="xml"
+		attributeName="transform"
+		type="rotate"
+		from="0 40 40"
+		to="360 40 40"
+		dur="0.6s"
+		repeatCount="indefinite"
+	/>
+</path>
+</svg></div></div>
+
+<div class="overlay_search_popup_main" style="display:none"><div class="vm"><svg version="1.1" 
+	class="svg-loader-main" 
+	xmlns="http://www.w3.org/2000/svg" 
+	xmlns:xlink="http://www.w3.org/1999/xlink" 
+	x="0px"
+	y="0px" 
+	viewBox="0 0 80 80" 
+	xml:space="preserve">
+
+<path 
+	fill="#D43B11" 
+	d="M10,40c0,0,0-0.4,0-1.1c0-0.3,0-0.8,0-1.3c0-0.3,0-0.5,0-0.8c0-0.3,0.1-0.6,0.1-0.9c0.1-0.6,0.1-1.4,0.2-2.1
+	c0.2-0.8,0.3-1.6,0.5-2.5c0.2-0.9,0.6-1.8,0.8-2.8c0.3-1,0.8-1.9,1.2-3c0.5-1,1.1-2,1.7-3.1c0.7-1,1.4-2.1,2.2-3.1
+	c1.6-2.1,3.7-3.9,6-5.6c2.3-1.7,5-3,7.9-4.1c0.7-0.2,1.5-0.4,2.2-0.7c0.7-0.3,1.5-0.3,2.3-0.5c0.8-0.2,1.5-0.3,2.3-0.4l1.2-0.1
+	l0.6-0.1l0.3,0l0.1,0l0.1,0l0,0c0.1,0-0.1,0,0.1,0c1.5,0,2.9-0.1,4.5,0.2c0.8,0.1,1.6,0.1,2.4,0.3c0.8,0.2,1.5,0.3,2.3,0.5
+	c3,0.8,5.9,2,8.5,3.6c2.6,1.6,4.9,3.4,6.8,5.4c1,1,1.8,2.1,2.7,3.1c0.8,1.1,1.5,2.1,2.1,3.2c0.6,1.1,1.2,2.1,1.6,3.1
+	c0.4,1,0.9,2,1.2,3c0.3,1,0.6,1.9,0.8,2.7c0.2,0.9,0.3,1.6,0.5,2.4c0.1,0.4,0.1,0.7,0.2,1c0,0.3,0.1,0.6,0.1,0.9
+	c0.1,0.6,0.1,1,0.1,1.4C74,39.6,74,40,74,40c0.2,2.2-1.5,4.1-3.7,4.3s-4.1-1.5-4.3-3.7c0-0.1,0-0.2,0-0.3l0-0.4c0,0,0-0.3,0-0.9
+	c0-0.3,0-0.7,0-1.1c0-0.2,0-0.5,0-0.7c0-0.2-0.1-0.5-0.1-0.8c-0.1-0.6-0.1-1.2-0.2-1.9c-0.1-0.7-0.3-1.4-0.4-2.2
+	c-0.2-0.8-0.5-1.6-0.7-2.4c-0.3-0.8-0.7-1.7-1.1-2.6c-0.5-0.9-0.9-1.8-1.5-2.7c-0.6-0.9-1.2-1.8-1.9-2.7c-1.4-1.8-3.2-3.4-5.2-4.9
+	c-2-1.5-4.4-2.7-6.9-3.6c-0.6-0.2-1.3-0.4-1.9-0.6c-0.7-0.2-1.3-0.3-1.9-0.4c-1.2-0.3-2.8-0.4-4.2-0.5l-2,0c-0.7,0-1.4,0.1-2.1,0.1
+	c-0.7,0.1-1.4,0.1-2,0.3c-0.7,0.1-1.3,0.3-2,0.4c-2.6,0.7-5.2,1.7-7.5,3.1c-2.2,1.4-4.3,2.9-6,4.7c-0.9,0.8-1.6,1.8-2.4,2.7
+	c-0.7,0.9-1.3,1.9-1.9,2.8c-0.5,1-1,1.9-1.4,2.8c-0.4,0.9-0.8,1.8-1,2.6c-0.3,0.9-0.5,1.6-0.7,2.4c-0.2,0.7-0.3,1.4-0.4,2.1
+	c-0.1,0.3-0.1,0.6-0.2,0.9c0,0.3-0.1,0.6-0.1,0.8c0,0.5-0.1,0.9-0.1,1.3C10,39.6,10,40,10,40z"
+	>
+
+	<animateTransform
+		attributeType="xml"
+		attributeName="transform"
+		type="rotate"
+		from="0 40 40"
+		to="360 40 40"
+		dur="0.6s"
+		repeatCount="indefinite"
+	/>
+</path>
+</svg></div></div>
+
+<div class="lds-ring">
+	<div></div>
+	<div></div>
+	<div></div>
+	<div></div>
+</div>
+<!-- popup overlay START-->
+<div class="overlay1_popup overlay--1">
+	<div class="overlay__inner overlay__inner--color-1"></div>
+</div>
+<div class="overlay1_popup overlay--2">
+	<div class="overlay__inner overlay__inner--color-2"></div>
+</div>
+<div class="overlay1_popup overlay--3">
+	<div class="overlay__inner overlay__inner--color-3"></div>
+</div>
+<!-- popup overlay END -->
+<div class="popup_container">
+	<div class="image_box_container">
+		<svg height="512px" id="Layer_1" class="circle"
+			style="enable-background: new 0 0 512 512;" version="1.1"
+			viewBox="0 0 512 512" width="512px" xml:space="preserve"
+			xmlns="http://www.w3.org/2000/svg"
+			xmlns:xlink="http://www.w3.org/1999/xlink">
+			<path
+				d="M443.6,387.1L312.4,255.4l131.5-130c5.4-5.4,5.4-14.2,0-19.6l-37.4-37.6c-2.6-2.6-6.1-4-9.8-4c-3.7,0-7.2,1.5-9.8,4  L256,197.8L124.9,68.3c-2.6-2.6-6.1-4-9.8-4c-3.7,0-7.2,1.5-9.8,4L68,105.9c-5.4,5.4-5.4,14.2,0,19.6l131.5,130L68.4,387.1  c-2.6,2.6-4.1,6.1-4.1,9.8c0,3.7,1.4,7.2,4.1,9.8l37.4,37.6c2.7,2.7,6.2,4.1,9.8,4.1c3.5,0,7.1-1.3,9.8-4.1L256,313.1l130.7,131.1  c2.7,2.7,6.2,4.1,9.8,4.1c3.5,0,7.1-1.3,9.8-4.1l37.4-37.6c2.6-2.6,4.1-6.1,4.1-9.8C447.7,393.2,446.2,389.7,443.6,387.1z" /></svg>
+	</div>
+	<div class='image_wrap'>
+		<div class='image_wrap_sub'>
+			<div class="image_wrap1">
+				<div class="image_img_content">
+					<div class="image_data"></div>
+				</div>
+				<div class="image_multi_data_content">
+					<img class="multi_prev" src="assets/images/prev.png">
+					
+					<div class="image_mutil_data">
+						<ul class="slide_">
+							
+						</ul>
+						
+
+					</div>
+					<img class="multi_next" src="assets/images/next.png">
+				</div>
+			</div>
+			<div class="image_wrap2">
+				<div class="popup_button_content">
+					<button class="popup_button">전송</button>
+					<button id="bt_clear" class="popup_button">지우기</button>
+					<div class="popup_button_set">
+						<input class='tgl tgl-ios' id='cb2' type='checkbox'> 
+						<label class='tgl-btn' for='cb2'></label> 
+						<label class='tgl-btn' for='cb2'>
+							
+					</div>
+				</div>
+				<div class="detail_content">
+					<canvas id="popup_canvas" class="popup_canvas" width="512" height="512" style="display:none"></canvas>
+					<div class="selected_content">
+						<div class='modal-content'>
+		<div class='modal-top'>
+			<div id='iconprev'>
+				<imgprev>
+			</div>
+			<div class='model-top-main'>
+				<div class='modal-top-content' id='selected-image-parent'></div>
+				<div class='model-bottom-wrap'>
+					 <div class="popup_cont">
+               <div class="img">
+                  <img src="" alt="">
+                  <a href="#" class="wide"><span>wide</span></a>
+               </div>
+               <div class="content">
+                  <div class="t1">
+                     <span class="category">Category</span>
+                     <span class="cate">로고</span>
+                  </div>
+                  <div class="t2">
+                     Agics Logo
+                     <ul>
+                        <li class="heart"><a href="#"></a></li>
+                        <li class="share"><a href="#"></a></li>
+                        <li class="link"><a href="#"></a></li>
+                     </ul>
+                  </div>
+                  <div class="t3">
+                     <div class="detail">
+                        <p class="detail_p">Detailed :  ㈜에이직스 로고</p>
+                    
+                     </div>
+                     <div class="tag">#AGICS, #LOGO, #AI</div>
+                  </div>
+                  <div class="t4">
+                     The Procuress<br>In 'The Procuress', Vermeer applied the large-scale figures of his early history scenes to the subject of genre painting. (1656 - Old Masters Picture Gallery, Dresden State Art Museums)
+                  </div>
+                  <div class="t5"><a href="#">more</a></div>
+               </div>
+            </div>
+				</div>
+			</div>
+			<div id='iconnext'>
+				<imgnext>
+			</div>
+        </div>
+	</div>
+					
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 
+	<svg fill="black" stroke-width="10" version="1.1"
+		xmlns="http://www.w3.org/2000/svg" class="wave">
+	<g>
+
+  <path id="feel-the-wave" d="" />
+
+  </g>  
+ 
+  </svg>
+   -->
+</div>
+<nav id="mySidenav" class="sidenav">
+	<div class='nav-inner no-highlight'>
+		<h2>
+			CATEGORY
+			<span id="closespan">
+				<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+			</span>
+		</h2>
+		
+		<div id='hotspots'></div>
+	</div>
+</nav>
+
+<span class="searchcancel">X</span>
+
+<!-- image Picker -->
+<script type='text/html' id='selected-image-template'>
+	<div class='modal-content'>
+		<div class='modal-top'>
+			<div id='iconprev'>
+				<imgprev>
+			</div>
+			<div class='model-top-main'>
+				<div class='modal-top-content' id='selected-image-parent'></div>
+				<div class='model-bottom-wrap'>
+					 <div class="popup_cont">
+               <div class="img">
+                  <img src="" alt="">
+                  <a href="#" class="wide"><span>wide</span></a>
+               </div>
+               <div class="content">
+                  <div class="t1">
+                     <span class="category">Category</span>
+                     <span class="cate">로고</span>
+                  </div>
+                  <div class="t2">
+                     Agics Logo
+                     <ul>
+                        <li class="heart"><a href="#"></a></li>
+                        <li class="share"><a href="#"></a></li>
+                        <li class="link"><a href="#"></a></li>
+                     </ul>
+                  </div>
+                  <div class="t3">
+                     <div class="detail">
+                        <p>Detailed :  ㈜에이직스 로고</p>
+                        <p>Resolution : 1280x556</p>
+                     </div>
+                     <div class="tag">#AGICS, #LOGO, #AI</div>
+                  </div>
+                  <div class="t4">
+                     The Procuress<br>In 'The Procuress', Vermeer applied the large-scale figures of his early history scenes to the subject of genre painting. (1656 - Old Masters Picture Gallery, Dresden State Art Museums)
+                  </div>
+                  <div class="t5"><a href="#">more</a></div>
+               </div>
+            </div>
+				</div>
+			</div>
+			<div id='iconnext'>
+				<imgnext>
+			</div>
+        </div>
+	</div>
+</script>
+
+    <!--  image selection -->
+    <div id='selected-image-target' class='no-highlight'></div>
+
+    <!-- multi image -->
+    <script type='text/html' id='selected-images-template'>
+	<div class='selected-image'>
+		<div class='toggle-selection'>✕</div>
+		<div data-index='{dataindex}' data-image='{dataimage}' class='background-image' style="background-image: url('{imageurl}');"></div>
+	</div>
+</script>
+
+
+    <div id='view-selected'>View Selected</div>
+
+    <div id='selected-images-modal'>
+        <div class='modal-content'>
+            <div class='multi-modal-top'>
+                <div id='selected-images-target'>
+                    <div class='modal-top-content'>
+                        <h2>Selected Images</h2>
+                        <p>You have selected <b id='n-images-selected'></b> images</p>
+
+                        <div id='selected-images-grid'></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class='modal-bottom'>
+                <div class='modal-bottom-content'>
+                    <div class='modal-text-left'>
+                        <b>Help Guide</b>
+                        <p>Click an image above for higher resolution, or click the button to the right to download a
+                            JSON file identifying selected images.</p>
+                    </div>
+
+                    <div class='modal-text-right'>
+                        <input id='download-filename' type='text' placeholder='filename'>
+
+                        <a href='#' id='download-link'>
+                            <button class='active'>Download Metadata</button>
+                        </a>
+
+                        <div id='download-as'>
+                            <span>Download as:</span>
+                            <button class='filetype active' id='csv'>CSV</button>
+                            <button class='filetype' id='json'>JSON</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-autocomplete" class="search-autocomplete"></div>
+
+    <!-- Webgl / noscript warnings -->
+    <div id='webgl-not-available'>
+        <div class='browser-message'>Sorry, your browser is not able to load a WebGL scene currently. Please check your
+            browser settings and try again.</div>
+    </div>
+    </div>
+    <noscript>
+        <span class='browser-message'>Sorry, your browser is not able to load a WebGL scene currently. Please enable
+            JavaScript and try again.</span>
+    </noscript>
+
+    <!-- 가림막 -->
+    <!-- <div class="mdl-spinner mdl-js-spinner search-preloader"></div> -->
+
+
+    <script src="js/lib/help/autocomplete.min_beautifier.js"></script>
+    <script src="js/lib/animation/tweenlite.min.js"></script>
+    <script src="js/lib/animation/TweenMax.min.js"></script>
+    <script src="js/lib/three.min.js"></script>
+    <script src="js/lib/help/stats.js"></script>
+    <script src="js/lib/postprocessing/LuminosityHighPassShader.js"></script>
+    <script src="js/lib/postprocessing/CopyShader.js"></script>
+    <script src="js/lib/postprocessing/EffectComposer.js"></script>
+    <script src="js/lib/postprocessing/UnrealBloomPass.js"></script>
+    <script src="js/lib/postprocessing/ShaderPass.js"></script>
+    <script src="js/lib/postprocessing/RenderPass.js"></script>
+    <script src="js/lib/control/OrbitControls.js"></script>
+    <script src="js/lib/control/trackball-controls.js"></script>
+	<script type='module' src="js/vr.js"></script>
+
+    <script src="js/utils.js"></script>
+    <script src="js/youtubeapi.js"></script>
+    <script src="js/popupanimation.js"></script>
+    <script src="js/shader.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/cell.js"></script>
+    <script src="js/layoutinfo.js"></script>
+    <script src="js/popup.js"></script>
+    <script src="js/itemselect.js"></script>
+    <script src="js/AgicsWorld.js"></script>
+    <script src="js/load.js"></script>
+    <script src="js/choose.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/video.js"></script>
+    <script src="js/label.js"></script>
+    <script src="js/bloomeffect.js"></script>
+    <script src="js/startanimation.js"></script>
+
+	<script src="js/lib/leap/leap.min.js"></script>
+	<script src="js/lib/control/LeapCameraControls.js"></script>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>
