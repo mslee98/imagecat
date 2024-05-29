@@ -9,16 +9,14 @@ function map(t, a0, b0, a1, b1) {
 }
 
 
-
 function AgicsWorld(){
-	
-	
 	this.canvas = document.querySelector('#agicsplot-canvas');
 	this.scene = this.getScene();
 	this.camera = this.getCamera();
 	this.renderer = this.getRenderer();
 	this.controls = this.getControls();
-	this.stats = this.getStats();
+	this.statsFps = this.getStats(0);
+	this.statsMs = this.getStats(1);
 	this.color = new THREE.Color();
 	this.center = {};
 	this.group = new THREE.Group();
@@ -29,8 +27,32 @@ function AgicsWorld(){
 	this.composer = null;
 	this.bloomComposer = null;
 	this.clock = new THREE.Clock();
-	
-	this.leapYn = false;
+
+	//fps 측정을 위한 변수들임
+	this.totalYn = false;
+	this.fpsTestYn = false
+
+	this.initialFpsYn = false
+	this.startTime = 0;
+	this.endTime = 0;
+	this.frameCount = 0
+	this.timer = 0;
+
+	this.layoutCheck = false;
+	this.gridCheck = false;
+
+	this.scenarioIndex;
+	this.categoryUseYn = false;
+
+	this.result = new Map()
+	this.reset_btn = document.querySelector('#reset_btn');
+	this.reset_btn.addEventListener('click', () => {
+		if(this.fpsTestYn) {
+			this.fpsTestYn = false;
+		} else {
+			this.fpsTestYn = true
+		}
+	})
 	
 	//vr button
 	this.isVrButton = false;
@@ -47,6 +69,12 @@ function AgicsWorld(){
 		pointSize: 0,
 	};
 	
+	this.raycaster = new THREE.Raycaster();
+	this.pointer = new THREE.Vector2()
+
+	// 수정사항
+	// this.canvas.addEventListener('pointermove', this.onPointerMove.bind(this))/
+
 	this.tempMatrix = new THREE.Matrix4();
 	this.addEventListeners();
 	
@@ -61,13 +89,11 @@ function AgicsWorld(){
 
 	this.objects = [];
 	
-	this.leapController = new Leap.Controller();
-	// this.leapController.setBackground(true);
+	this.leapController = new Leap.Controller(); // controller연결했는데 on() 메서드가 동작하는지를 모르겠음 이거 잘 살펴봐야할듯
 	
-	this.leapController.on('connect', () => {
-		console.log("Successfully Connected");
-		// this.leapYn = true;
-		// this.getControls()
+	this.leapController.connect();
+	
+	const leapConnectionEvent = () => {
 
 		this.cameraControls = new THREE.LeapCameraControls(this.camera);
 
@@ -89,32 +115,139 @@ function AgicsWorld(){
 		this.cameraControls.panFingers     = [6, 12];
 		this.cameraControls.panRightHanded = false; // for left-handed person
 
+
+		//분기처리 확실하게 해야 함.... 비동기 처리?해야할듯한데?
 		this.renderer.setAnimationLoop(
 			Leap.loop(this.leapRender.bind(this))
 		);
-	});
-	
-	this.leapController.on('deviceConnected', () => {
-		console.log("A Leap device has been connected");
-	});
-	
-	this.leapController.on('deviceDisconnected', () => {
-		console.log('A Leap device has been disconnected');
-		this.renderer.setAnimationLoop(this.render.bind(this));
-	});
 
-	this.leapController.connect();
+
+
+		//이게 된다고!? 일단 모르겠다 진행ㄱㄱ
+		this.renderer.setAnimationLoop(this.render.bind(this));
+	}
+
+	leapConnectionEvent()
 
 	this.leapCellIdx = -1;
+
+	// this.renderer.setAnimationLoop(this.branchRender.bind(this))
 
 	//document.body.appendChild(window._vrbutton.createButton(this.renderer));
 	//this.renderer.xr.enabled=true;
 
+	// this.renderBranch()
+
+
+
 }
 
-// AgicsWorld.prototype.leapRender = function(frame){
-// 	console.log(frame);
-// }
+
+AgicsWorld.prototype.onPointerMove = function(e) {
+
+	this.pointer.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+	this.pointer.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+
+	this.raycaster.setFromCamera(this.pointer, agicsworld.camera);
+
+	// this.updateRayVisualization()
+
+	//console.log(this.group.children[0].geometry.attributes.position.array);
+
+	if(this.group) {
+	
+		this.raycaster.setFromCamera( this.pointer, agicsworld.camera );
+	
+		const intersects = this.raycaster.intersectObjects( this.scene.children);
+
+		// console.log(intersects)
+	}
+
+
+}
+
+AgicsWorld.prototype.reporting = function(event) {
+
+	const popup_report = document.querySelector('#report_pop');
+	const tbody = document.querySelector('#report_tbody');
+
+	let labelArr = [], fpsArr = [], msArr = [];
+
+	for( [key, value] of popup.result) {
+		labelArr.push(key+1)
+
+		let [a, b, ...resultFps] = value.fps
+		let [c, d, ...resultMs] = value.ms
+		
+		fpsArr.push(Math.round(resultFps.reduce((a,b) => a + b) / resultFps.length))
+		msArr.push(Math.round(resultMs.reduce((a,b) => a + b) / resultMs.length))
+	}
+
+	for(let i=0; i < fpsArr.length; i++) {
+		var tr = document.createElement('tr');
+		var td1 = document.createElement('td');
+		td1.textContent = i+1;
+		var td2 = document.createElement('td');
+		td2.textContent = Math.round(fpsArr[i]);
+		var td3 = document.createElement('td')
+		td3.textContent = Math.round(msArr[i]);
+		tr.appendChild(td1);
+		tr.appendChild(td2);
+		tr.appendChild(td3)
+		tbody.append(tr)
+	}
+
+	const ctx = document.querySelector('#report_chart');
+
+	let fpsAvg = document.querySelector('#fps_avg')
+	let msAvg = document.querySelector('#ms_avg');
+
+	fpsAvg.innerText= Math.round(fpsArr.reduce((a,b) => (a+b)) / fpsArr.length);
+	msAvg.innerText= Math.round(msArr.reduce((a,b) => (a+b)) / msArr.length)
+
+	new Chart(ctx, {
+		type: 'line',
+		data: {
+			labels: labelArr,
+			datasets: [
+				{
+					label: 'FPS',
+					data: fpsArr,
+					borderWidth: 2
+				},
+				{
+					label: 'MS',
+					data: msArr,
+					borderWidth: 2
+				},
+			]
+		},
+		legend: {
+			position: 'right'
+		},
+		options: {
+			scales: {
+				x: {
+					grid: {
+						color: '#9091AE'
+					}
+				},
+				y: {
+					beginAtZero: true,
+					grid: {
+						color: '#9091AE'
+					}
+				},
+			},
+			plugins: {
+				legend: {
+					position:'top',
+					align: 'end'
+				}
+			},
+		}
+	});
+}
 
 AgicsWorld.prototype.onSelectStart = function(event){
 	const controller = event.target;
@@ -227,9 +360,7 @@ AgicsWorld.prototype.getCamera = function(){
 	var canvasSize = getCanvasSize();
 	var aspectRatio = canvasSize.w/canvasSize.h;
 	
-    
-	
-    return new THREE.PerspectiveCamera(75, aspectRatio, 0.001, 1000);;
+    return new THREE.PerspectiveCamera(75, aspectRatio, 0.001, 3000);;
 }
 
 AgicsWorld.prototype.getRenderer = function(){
@@ -288,14 +419,14 @@ AgicsWorld.prototype.getControls = function(){
 
 
 
-
+/**
+ * 이미지 클릭하면 확대하는 카메라 움직임을 정의
+ */
 AgicsWorld.prototype.moveTo = function(obj){
 	if (this.state.flying) return;
 	//초기 화면 카메라 전환중일때는 moveTo 불가
 	if (welcome.worldtransition) return;
 	
-
-
 	this.state.flying = true;
 	
 	var vecobj = new THREE.Vector3(obj.x,obj.y,obj.z);
@@ -336,8 +467,6 @@ AgicsWorld.prototype.moveTo = function(obj){
              	
          }.bind(this),
          onComplete: function () {
-
-
         	 this.controls.target = new THREE.Vector3(tar.x,tar.y,tar.z)
         	 this.controls.update();
         	 //this.camera.lookAt(pos);
@@ -351,14 +480,16 @@ AgicsWorld.prototype.moveTo = function(obj){
 
 
 AgicsWorld.prototype.gotoLandmark = function(obj){
+
 	if(this.state.flying) return;
 	if(obj ===undefined) return;
 	
 	const lodingdiv = document.querySelector('.overlay_search_popup_main');
-	lodingdiv.style.display = "table";
-	lodingdiv.children[0].children[0].style.fill="#fff";
+	// lodingdiv.style.display = "table";
+	// // lodingdiv.style.display = "block";
+	// lodingdiv.children[0].children[0].style.fill="#fff";
 	
-	welcome.ringElem.style.display = 'block';
+	// welcome.ringElem.style.display = 'block';
 	
 	var vecobj = new THREE.Vector3(obj.x,obj.y,obj.z);
 	this.state.flying = true;
@@ -376,75 +507,203 @@ AgicsWorld.prototype.gotoLandmark = function(obj){
     pos = vecobj.clone().add(delta).add(upVec);   
 	tar = vecobj.clone().add(upVec);
 	
-	
-	//카메라 포지션과 target 거리가 0.03아래이면 moveTo를 실행하여 이동
-	if(this.camera.position.distanceTo(pos)<0.03 &&!this.state.initcameraposition){
-		this.state.flying = false;
-		welcome.ringElem.style.display = 'none';
-		agicsworld.moveTo(obj);
-		lodingdiv.style.display = "none";
-		return;
-	}else if(this.camera.position.distanceTo(pos)<0.03&&this.state.initcameraposition){
-		this.state.flying = false;
-		welcome.ringElem.style.display = 'none';
-		lodingdiv.style.display = "none";
-		return
-	}
-	
-	
-	var speed = 0.1;
-	var duration = Math.min(8,Math.max(2,tar.distanceTo(this.controls.target)/speed));
-	
-	
-	var elevation = 0.05;
-	var cameras = this.gethotspot(this.camera.position,pos,elevation);
-	var targets = this.gethotspot(this.controls.target,tar,elevation);
-	
-	var exports = {
-			time : 0
-	}
-	var delay = 0;
-	 TweenLite.to(exports, duration , {
-         time: 1,
-         ease: Cubic.easeOut,
-         onUpdate: function(){
-        	 
-        	 
-        	 if(this.state.initcameraposition){
+	// if(this.camera.position.distanceTo(pos)<0.03 &&!this.state.initcameraposition){
+	// 	this.state.flying = false;
+	// 	welcome.ringElem.style.display = 'none';
+	// 	agicsworld.moveTo(obj);
+	// 	lodingdiv.style.display = "none";
+	// 	this.layoutCheck = false;
+	// 	return;
+	// }else if(this.camera.position.distanceTo(pos)<0.03&&this.state.initcameraposition){
+	// 	this.state.flying = false;
+	// 	welcome.ringElem.style.display = 'none';
+	// 	lodingdiv.style.display = "none";
+	// 	this.layoutCheck = false;
 
-                 this.camera.position.x = lerp(exports.time, cameraOrigin.x, pos.x);
-                 this.camera.position.y = lerp(exports.time, cameraOrigin.y, pos.y);
-                 this.camera.position.z = lerp(exports.time, cameraOrigin.z, pos.z);
-                 
-                 target.position.x = lerp(exports.time, targetOrigin.x, tar.x);
-                 target.position.y = lerp(exports.time, targetOrigin.y, tar.y);
-                 target.position.z = lerp(exports.time, targetOrigin.z, tar.z);
-                 
-        		 this.camera.lookAt(0,0,0);
-        	 }else{
-        		 this.camera.position.copy(bilinearLerp(exports.time,cameras))
-            	 this.controls.target.copy(bilinearLerp(exports.time,targets))
-        	 }
-        	 }.bind(this),
-        onComplete:function(){
-        	   exports.time = 1;
-        		 this.camera.position.copy(bilinearLerp(exports.time,cameras))
-        		 if(this.state.initcameraposition){
-        			 this.camera.lookAt(0,0,0);
-        			 this.controls.target.copy(new THREE.Vector3(0,0,0));
-        		 }else{
-        			 this.controls.target.copy(bilinearLerp(exports.time,targets))
-        		 }
-            	
-            	 this.state.flying = false;
-        	     this.state.initcameraposition = false;
-        	     welcome.ringElem.style.display = 'none';
-        	     lodingdiv.style.display = "none";
-        }.bind(this),
-        	
-        })
+	// 	return
+	// }
+
+
+	// var speed = 0.1;
+	// var duration = Math.min(8,Math.max(2,tar.distanceTo(this.controls.target)/speed));
 	
 	
+	// var elevation = 0.05;
+	// var cameras = this.gethotspot(this.camera.position,pos,elevation);
+	// var targets = this.gethotspot(this.controls.target,tar,elevation);
+	
+	// var exports = {
+	// 		time : 0
+	// }
+	// var delay = 0;
+	// 	TweenLite.to(exports, duration , {
+	// 		time: 1,
+	// 		ease: Cubic.easeOut,
+	// 		onUpdate: function(){
+	// 		lodingdiv.style.display = "table";
+	// 		// lodingdiv.style.display = "block";
+	// 		lodingdiv.children[0].children[0].style.fill="#fff";
+			
+	// 		welcome.ringElem.style.display = 'block';	
+			
+	// 		if(this.state.initcameraposition){
+
+	// 				this.camera.position.x = lerp(exports.time, cameraOrigin.x, pos.x);
+	// 				this.camera.position.y = lerp(exports.time, cameraOrigin.y, pos.y);
+	// 				this.camera.position.z = lerp(exports.time, cameraOrigin.z, pos.z);
+					
+	// 				target.position.x = lerp(exports.time, targetOrigin.x, tar.x);
+	// 				target.position.y = lerp(exports.time, targetOrigin.y, tar.y);
+	// 				target.position.z = lerp(exports.time, targetOrigin.z, tar.z);
+					
+	// 				this.camera.lookAt(0,0,0);
+	// 			}else{
+	// 				this.camera.position.copy(bilinearLerp(exports.time,cameras))
+	// 				this.controls.target.copy(bilinearLerp(exports.time,targets))
+	// 			}
+	// 		}.bind(this),
+	// 	onComplete:function(){
+	// 			exports.time = 1;
+	// 				this.camera.position.copy(bilinearLerp(exports.time,cameras))
+	// 				if(this.state.initcameraposition){
+	// 					this.camera.lookAt(0,0,0);
+	// 					this.controls.target.copy(new THREE.Vector3(0,0,0));
+	// 				}else{
+	// 					this.controls.target.copy(bilinearLerp(exports.time,targets))
+	// 				}
+				
+	// 				this.state.flying = false;
+	// 				this.state.initcameraposition = false;
+	// 				welcome.ringElem.style.display = 'none';
+	// 				lodingdiv.style.display = "none";
+
+	// 				console.log("animation end...")
+	// 	}.bind(this),
+			
+	// 	})
+
+	if(!this.layoutCheck) {
+		if(this.camera.position.distanceTo(pos)<0.03 &&!this.state.initcameraposition){
+			this.state.flying = false;
+			welcome.ringElem.style.display = 'none';
+			agicsworld.moveTo(obj);
+			lodingdiv.style.display = "none";
+			this.layoutCheck = false;
+			return;
+		}else if(this.camera.position.distanceTo(pos)<0.03&&this.state.initcameraposition){
+			this.state.flying = false;
+			welcome.ringElem.style.display = 'none';
+			lodingdiv.style.display = "none";
+			this.layoutCheck = false;
+
+			return
+		}
+	} else {
+		var speed = 0.1;
+		var duration = Math.min(8,Math.max(2,tar.distanceTo(this.controls.target)/speed));
+		
+		
+		var elevation = 0.05;
+		var cameras = this.gethotspot(this.camera.position,pos,elevation);
+		var targets = this.gethotspot(this.controls.target,tar,elevation);
+		
+		var exports = {
+				time : 0
+		}
+		var delay = 0;
+		 TweenLite.to(exports, duration , {
+			 time: 1,
+			 ease: Cubic.easeOut,
+			 onUpdate: function(){
+				lodingdiv.style.display = "table";
+				// lodingdiv.style.display = "block";
+				lodingdiv.children[0].children[0].style.fill="#fff";
+				
+				welcome.ringElem.style.display = 'block';	
+				
+				if(this.state.initcameraposition){
+	
+					 this.camera.position.x = lerp(exports.time, cameraOrigin.x, pos.x);
+					 this.camera.position.y = lerp(exports.time, cameraOrigin.y, pos.y);
+					 this.camera.position.z = lerp(exports.time, cameraOrigin.z, pos.z);
+					 
+					 target.position.x = lerp(exports.time, targetOrigin.x, tar.x);
+					 target.position.y = lerp(exports.time, targetOrigin.y, tar.y);
+					 target.position.z = lerp(exports.time, targetOrigin.z, tar.z);
+					 
+					 this.camera.lookAt(0,0,0);
+					}else{
+					 this.camera.position.copy(bilinearLerp(exports.time,cameras))
+					 this.controls.target.copy(bilinearLerp(exports.time,targets))
+					}
+				}.bind(this),
+			onComplete:function(){
+				   exports.time = 1;
+					 this.camera.position.copy(bilinearLerp(exports.time,cameras))
+					 if(this.state.initcameraposition){
+						 this.camera.lookAt(0,0,0);
+						 this.controls.target.copy(new THREE.Vector3(0,0,0));
+					 }else{
+						 this.controls.target.copy(bilinearLerp(exports.time,targets))
+					 }
+					
+					 this.state.flying = false;
+					 this.state.initcameraposition = false;
+					 welcome.ringElem.style.display = 'none';
+					 lodingdiv.style.display = "none";
+	
+					 console.log("animation end...")
+//					 const index = this.getScenarioJsonData(this.scenarioIndex);
+
+					 if(!this.gridCheck) {
+						 const resIndex = this.getScenarioJsonData(this.scenarioIndex)
+							 .then(result => {
+								popup.showimage([], result)	
+							})
+					 } else {
+						this.gridCheck = false;
+					 }
+
+					// this.getScenarioJsonData(this.scenarioIndex)
+			}.bind(this),
+				
+			})
+
+	}
+	
+}
+
+
+AgicsWorld.prototype.getScenarioJsonData = function(index) {
+
+	return new Promise((resolve, reject) => {
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', '/js/scenario.json', true);
+		xhr.responseType = 'json';
+		xhr.onload = function() {
+			if (xhr.status === 200) {
+				var data = xhr.response;
+				const dataArr = Object.values(data);
+				let scenarioIdx = 0;
+	
+				dataArr.forEach((item, idx) => {
+					if(idx+1 === index) {
+						scenarioIdx = item.index
+					}
+				})
+
+				resolve(scenarioIdx);
+	
+			} else {
+				console.error('Error fetching data:', xhr.status, xhr.statusText);
+			}
+		};
+		xhr.onerror = function() {
+			console.error('Network Error');
+		};
+		xhr.send();
+
+	})
 }
 
 AgicsWorld.prototype.gethotspot = function(a,b,elevation){
@@ -469,10 +728,15 @@ AgicsWorld.prototype.moveCellIdx =function(idx,randmark){
 	
 	var cell = data.cells[idx];
 
+	console.error(idx, "   /   ",cell)
+
 //3d
 	//그리드 형태 변환할때 카메라 경로
 	if(idx === -7){
 		this.state.initcameraposition = true;
+
+		this.gridCheck = true;
+
 		agicsworld.gotoLandmark({
 			x: 0.0,
 			y: 1.7,
@@ -500,15 +764,31 @@ AgicsWorld.prototype.moveCellIdx =function(idx,randmark){
 			z: cell.z,
 		})
 	}
-	
-	
+
 }
-AgicsWorld.prototype.getStats = function(){
+AgicsWorld.prototype.getStats = function(modeNumber){
 	//if(!window.location.href.includes('stats=true')) return null;
-	var stats = new Stats();
+
+	let stats;
+
+	switch(modeNumber) {
+		case 0: {
+			stats = new Stats()
+			stats.setMode(0);
+			break;
+		}
+		case 1: {
+			stats = new Stats()
+			stats.setMode(1);
+			break;
+		}
+		default: {
+			stats = new Stats()
+			stats.setMode(0);
+		}
+	} 
 
 	var thisParaent = document.getElementById("stats-output");
-
 	thisParaent.appendChild(stats.domElement);
 
 	return stats;
@@ -548,14 +828,34 @@ AgicsWorld.prototype.setMode = function(mode){
 	
 	if(this.mode === 'pan'){
 		document.querySelector('.lz').classList.add("active");
-		// this.controls.noPan = false;
+
+		this.controls.enablePan = false;
+		this.controls.enableRotate = true;
+		this.controls.mouseButtons.LEFT = 0;
+		this.controls.mouseButtons.RIGHT = 2;
+
 		this.canvas.classList.remove('move');
 		this.canvas.classList.add('pan');
+
 	}else if(this.mode ==='move'){
 		document.querySelector('.lxy').classList.add("active");
-		// this.controls.noPan = true;
+
+		this.controls.enablePan = true;
+		this.controls.enableRotate = false;
+		this.controls.mouseButtons.LEFT = 2;
+		this.controls.mouseButtons.RIGHT = 0;
+
 		this.canvas.classList.remove('pan');
 		this.canvas.classList.add('move');
+
+		/**
+		 * 아이템을 선택하면 값을 초기화 시킴 
+		 * 클릭 좌표를 저장한 이유는 무엇?
+		 * 
+		 * ItemSelect.pos0 = null;
+		 * ItemSelect.pos1 = null;
+		 * ItemSelect.frozen = false;
+		 */
 		itemselect.start();
 	}
 }
@@ -612,14 +912,29 @@ AgicsWorld.prototype.getHeightAt = function(x,y){
 
 AgicsWorld.prototype.handleResize = function() {
 
-	  var canvasSize = getCanvasSize(),
+	var elem = document.querySelector('#agicsplot-canvas')
+
+	//이 함수 확인 필요함
+	// function getCanvasSize(){
+	// 	var elem = document.querySelector('#agicsplot-canvas');
+	
+	// 	return {
+	// 		w: elem.clientWidth,
+	// 		h: elem.clientHeight,
+	// 	}
+	// }
+
+	  var canvasSize = getCanvasSize()
 	      w = canvasSize.w * window.devicePixelRatio,
 	      h = canvasSize.h * window.devicePixelRatio;
+
+	// let w = window.innerWidth;
+	// let h = window.innerHeight;
+
 	  this.camera.aspect = w / h;
 	  this.camera.up.set(0,1,0);
 	  this.camera.updateProjectionMatrix();
 	  this.renderer.setSize(w, h, false);
-	  console.log("resize");
 	  //this.controls.handleResize();
 	  choose.tex.setSize(w, h);
 	  this.setPointScalar();
@@ -657,6 +972,7 @@ AgicsWorld.prototype.plot = function(){
 		geometry.setAttribute('highlight',attrs.highlight);
 		geometry.setAttribute('isvideo',attrs.isvideo);
 		geometry.setAttribute('actionstate',attrs.actionstate);
+
 		 // 드로우 범위를 지정하지 않으면 점이 렌더링되지 않습니다
 		geometry.setDrawRange(0,meshCells.length);
 		
@@ -669,7 +985,9 @@ AgicsWorld.prototype.plot = function(){
 
 		 material.transparent = true;
 		
+		// var particles = new THREE.Points( geometry, material );
 		var particles = new THREE.Points( geometry, material );
+		console.log(particles)
 		
 
 		particles.frustumCulled = false;
@@ -1027,7 +1345,7 @@ AgicsWorld.prototype.getTexIndex = function(cells){
 	// -1이 아닌 마지막 index을 찾습니다.
 	var l =cells.length-1; while (cells[l].texIdx ==-1) l--;
 	
-	return {
+	return { 
 		first: cells[f].texIdx,
 		last: cells[l].texIdx,		
 	}
@@ -1061,23 +1379,15 @@ AgicsWorld.prototype.setUniform = function(key,val){
 	}
 }
 
+
 AgicsWorld.prototype.sphereinit = function(){
-
-
 		var geom = new THREE.IcosahedronGeometry(2,4);
-		
-			
-		
 		var material = this.getsphereShaderMaterial();
-		
 		var mesh = new THREE.Mesh(geom,material);
-		
 		this.sphere = mesh;
 		this.group.add(this.sphere);
-
-	
-
 }
+
 
 AgicsWorld.prototype.getsphereShaderMaterial = function(){
 	var tex = data.backgroundtex;
@@ -1105,27 +1415,52 @@ AgicsWorld.prototype.getsphereShaderMaterial = function(){
 	return material
 }
 
-
+// AgicsWorld.prototype.updateRayVisualization = function() {
+// 	this.rayStart.copy(this.camera.position);
+//     this.rayEnd.copy(this.raycaster.ray.direction).multiplyScalar(1000).add(this.rayStart);
+//     this.rayGeometry.verticesNeedUpdate = true; // 버텍스 업데이트
+// }
 
 AgicsWorld.prototype.init = function(){
 	
 	var axes = new THREE.AxesHelper(30000);
-
     var helper = new THREE.CameraHelper(agicsworld.camera);
     
-    //개발할때 필요한 3D 헬퍼
-    this.scene.add(helper);
-    this.scene.add(axes);
+    // //개발할때 필요한 3D 헬퍼
+    // this.scene.add(helper);
+    // this.scene.add(axes);
 
 	// 추후 3d 코드 (개발예정 )
     var light = new THREE.PointLight( 0xffffff, 1 );
     this.camera.add( light );
     
+
+	// 여기서 설정하면 뭐하냐고 이미 다른곳에 설정하는구만;;;
     this.camera.position.set(0, 0.8, 0.0);
-    this.camera.rotation.y = Math.PI
-    this.camera.layers.enable(1);
+    // this.camera.rotation.y = Math.PI
+    //this.camera.layers.enable(1);
 	this.setCenter();
+
+
+
+
+
 	
+	// 레이캐스터 시각화를 위한 머티리얼 생성
+	// this.rayMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+
+	// // 광선 시각화를 위한 시작점과 끝점 설정
+	// this.rayStart = this.camera.position.clone();
+	// this.rayDirection = new THREE.Vector3(0, 0, -1); // 카메라가 바라보는 방향으로 설정 (카메라의 -Z 방향)
+	// this.rayEnd = this.rayStart.clone().add(this.rayDirection.multiplyScalar(1000)); // 광선의 최대 길이를 설정하여 끝점 계산
+
+	// // 광선 시각화를 위한 기하 객체 생성
+	// this.rayGeometry = new THREE.Geometry();
+	// this.rayGeometry.vertices.push(this.rayStart, this.rayEnd);
+
+	// // 레이캐스터 시각화를 위한 라인 생성
+	// this.rayLine = new THREE.Line(this.rayGeometry, this.rayMaterial);
+	// this.scene.add(this.rayLine);
 
 	// 각 그리기 호출에 대한 셀을 추가
 	itemselect.init();
@@ -1145,6 +1480,10 @@ AgicsWorld.prototype.init = function(){
 
 	
 }
+
+let boxMesh;
+
+
 var lastFrame = Date.now();
 var thisFrame;
 
@@ -1152,6 +1491,9 @@ var time = 0.0;
 AgicsWorld.prototype.render = function() {
 	  //requestAnimationFrame(this.render.bind(this));
 	  
+
+	// this.group.position.set(Math.random()*5-5, Math.random()*5-5,Math.random()*5-5)
+
 	  if (!this.state.displayed) return;
 
 	  if(window._vrbutton && window._controllerModelFactory&& !this.isVrButton){
@@ -1179,11 +1521,95 @@ AgicsWorld.prototype.render = function() {
 	  //this.setColor();
 
 	
-	  this.stats.update();
-	  
+	//   this.stats.update(); 2개 있어서 주석 처리
+	this.statsFps.update();
+	// console.log(this.statsFps)
+	this.statsMs.update();
+
+	  if(popup.frameCheck) {
+		popup.frameCount++;
+		let currentTime = performance.now();
+		let elapsedTime = currentTime - popup.startTime;
+		
+		if(elapsedTime >= 100) {
+			var fps = popup.frameCount/ (elapsedTime / 1000);
+			var ms = elapsedTime / popup.frameCount;
+
+			popup.fpsArr.push(fps);
+			popup.msArr.push(ms);
+
+			popup.startTime = currentTime;
+			popup.frameCount = 0;
+		}
+
+	  }
+
+	// if(popup.frameCheck) {
+	// 	popup.frameCount++;
+
+	// 	var currentTime = performance.now();
+	// 	var elapsedTime = currentTime - popup.startTime;
+
+	// 	// console.log(`ss ${popup.frameCount} / ${elapsedTime} = ${currentTime}- ${popup.startTime}`)
+
+	// 	console.log(`elapsedTime : ${elapsedTime}`)
+		
+
+	// 	if( elapsedTime > 1000) {
+	// 		popup.startTime = performance.now();
+	// 		popup.frameCount = 0;
+	// 	}
+
+	// 	if(elapsedTime >= 100) {
+	// 		var fps = popup.frameCount/ (elapsedTime / 1000);
+	// 		var ms = elapsedTime / popup.frameCount;
+			
+	// 		console.log(`fps : ${fps} / ms : ${ms}`)
+
+	// 		popup.startTime = currentTime;
+	// 		popup.frameCount = 0;
+	// 	}
+	// }
+
+	// if(popup.frameCheck) {
+	// 	popup.frameCount++;
+
+	// 	var currentTime = performance.now();
+	// 	var elapsedTime = currentTime - popup.startTime;
+		
+	// 	console.log(`ss ${popup.frameCount} / ${elapsedTime} = ${currentTime}- ${popup.startTime}`)
+
+	// 	let msArr = [];
+	// 	let fpsArr = [];
+
+	// 	if(elapsedTime >= 100) {
+	// 		popup.timer += 0.1;
+			
+	// 		var fps = popup.frameCount/ (elapsedTime / 1000);
+	// 		var ms = elapsedTime / popup.frameCount;
+
+	// 		fpsArr.push(fps);
+	// 		msArr.push(ms);
+
+	// 		// console.log(`${popup.timer} / ${fps} / ${ms}`)
+	// 		console.log(`elapsedTime / ${elapsedTime}`)
+	// 		console.log(`${popup.timer.toFixed(1)} s / ${fps.toFixed(2)} FPS / ${ms.toFixed(2)} ms per frame`);
+	
+	// 		// if(!popup.has(popup.timer)) {
+	// 		// 	popup.set(popup.timer, `${fps}-${ms}`);
+	// 		// }
+	
+	// 		popup.frameCount = 0;
+	// 		popup.startTime = currentTime;
+	// 	}
+	// }
+
+
+
 	  if(!search.state.serching &&bloom.bloomrender&&agicsworld.camera.position.y<0.5){
 		  bloom.bloomPass.strength = (3.2*(1+Math.abs(Math.sin(time))));
 		  bloom.render();
+
 		  
 	  }
 	  
@@ -1197,77 +1623,78 @@ AgicsWorld.prototype.render = function() {
 
 	  // update the level of detail mechanism
 	  lod.update();
-	
 
 	  // update the dragged selection
 	  itemselect.update();
 }
 
+
+/**
+ * Frame data가 올 때만 실행
+ */
 AgicsWorld.prototype.leapRender = function(frame){
 	
 	if (!this.state.displayed) return;
-	  
 
-	this.showCursor(frame);
-
-	this.controlsIndex = this.focusObject(frame);
-
-	if(this.index == -1) {
-		this.cameraControls.update(frame)
-		// this.controls.update(frame);
-		// console.log(this.controls);
+	if(frame) {
+		this.showCursor(frame);
+	
+		this.controlsIndex = this.focusObject(frame);
+	
+		if(this.index == -1) {
+			this.cameraControls.update(frame)
+		}
 	}
+
 
 	// setInterval(this.changeControlsIndex, 250);
 	// setIntercal(this.cellChangeControlsIndex, 250);
 
-	//   if(window._vrbutton && window._controllerModelFactory&& !this.isVrButton){
-	// 	  document.body.appendChild(window._vrbutton.createButton(this.renderer));
-	// 	  this.raycaster = new THREE.Raycaster();
-	// 	  this.renderer.xr.enabled=true;
-	// 	  this.renderer.outputEncoding = THREE.sRGBEncoding;
-	// 	  this.renderer.shadowMap.enabled = true;
-	// 	  this.xrControllerInit();
+	  if(window._vrbutton && window._controllerModelFactory&& !this.isVrButton){
+		  document.body.appendChild(window._vrbutton.createButton(this.renderer));
+		  this.raycaster = new THREE.Raycaster();
+		  this.renderer.xr.enabled=true;
+		  this.renderer.outputEncoding = THREE.sRGBEncoding;
+		  this.renderer.shadowMap.enabled = true;
+		  this.xrControllerInit();
 
-	// 	  const light = new THREE.DirectionalLight( 0xffffff );
-	// 			light.position.set( 0, 6, 0 );
-	// 			light.castShadow = true;
-	// 			light.shadow.camera.top = 2;
-	// 			light.shadow.camera.bottom = - 2;
-	// 			light.shadow.camera.right = 2;
-	// 			light.shadow.camera.left = - 2;
-	// 			light.shadow.mapSize.set( 4096, 4096 );
-	// 			this.scene.add( light );
+		  const light = new THREE.DirectionalLight( 0xffffff );
+				light.position.set( 0, 6, 0 );
+				light.castShadow = true;
+				light.shadow.camera.top = 2;
+				light.shadow.camera.bottom = - 2;
+				light.shadow.camera.right = 2;
+				light.shadow.camera.left = - 2;
+				light.shadow.mapSize.set( 4096, 4096 );
+				this.scene.add( light );
 
-	// 	  this.isVrButton = true;
+		  this.isVrButton = true;
 
-
-	//   }
-	  //this.setColor();
-
-	
-	  this.stats.update();
-	  
-	  if(!search.state.serching &&bloom.bloomrender&&agicsworld.camera.position.y<0.5){
-		  bloom.bloomPass.strength = (3.2*(1+Math.abs(Math.sin(time))));
-		  bloom.render();
-		  
 	  }
-	  
-	  this.renderer.render(this.scene, this.camera);
-	  this.controls.update();
-
-	  thisFrame = Date.now();
-	  time += (thisFrame - lastFrame)/1000;	
-	  lastFrame = thisFrame;
-	  
-
-	  // update the level of detail mechanism
-	  lod.update();
+		//this.setColor();
 	
+		this.statsFps.update();
+		this.statsMs.update();
 
-	  // update the dragged selection
-	  itemselect.update();
+
+
+		if(!search.state.serching &&bloom.bloomrender&&agicsworld.camera.position.y<0.5){
+			bloom.bloomPass.strength = (3.2*(1+Math.abs(Math.sin(time))));
+			bloom.render();
+		}
+		
+		this.renderer.render(this.scene, this.camera);
+		this.controls.update();
+
+		thisFrame = Date.now();
+		time += (thisFrame - lastFrame)/1000;	
+		lastFrame = thisFrame;
+
+		// update the level of detail mechanism
+		lod.update();
+
+		// update the dragged selection
+		itemselect.update();
 }
 
 

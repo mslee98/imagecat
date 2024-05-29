@@ -69,6 +69,8 @@ ItemSelect.prototype.initmesh = function(){
 	this.mesh = new THREE.Line(geometry,material);
 	this.mesh.frustumCulled =false;
 	agicsworld.scene.add(this.mesh);
+
+
 	// console.log(agicsworld.scene);
 	
 	
@@ -103,6 +105,7 @@ ItemSelect.prototype.addMouseEventListeners = function(){
 	agicsworld.canvas.addEventListener('mousemove',function(e){
 		if(agicsworld.mode !='select' || this.frozen || !this.pos0) return;
 		
+		console.log("SSSSSSSSSSSSSSSSSSSSSSSS")
 		
 		this.pos1 = this.getCoords(e);
 		this.updateSelected();
@@ -142,6 +145,7 @@ ItemSelect.prototype.addModalEventListeners = function(){
 		}
 		if(e.target.className == 'background-image'){
 			var index = e.target.getAttribute('data-index');
+			console.log("1번째 호출")
 			popup.showimage(this.getSelectedImage(),index);
 		}
 	}.bind(this))

@@ -10,6 +10,7 @@ function Bloom(obj){
     	fragmentShader :  boxfragmentshader 
 	 });
 	 	this.particles = null;
+		
 
 		
 }
@@ -41,7 +42,12 @@ Bloom.prototype.init = function(){
 
 	position.usage = THREE.DynamicDrawUsage;
 	this.geometry.setAttribute('position',position);
-	this.particles = new THREE.Points(this.geometry,this.material);
+
+	// Point에서 Mesh로 변경
+	this.particles = new THREE.Mesh(this.geometry,this.material);
+
+	this.mesh = this.particles;
+	// const mesh = new THREE.Points( this.geometry, this.geometry);
 	this.particles.name='highlightbox';
 	this.particles.layers.set(1);
 
@@ -64,7 +70,6 @@ Bloom.prototype.create = function(){
 		}
 	}.bind(this))
 
-	console.log("particle", this.particles);
 
 	agicsworld.scene.add(this.particles);
 	agicsworld.objects.push(this.particles);
@@ -87,7 +92,6 @@ Bloom.prototype.delete = function(){
 }
 
 Bloom.prototype.visible = function(){
-	
 	agicsworld.scene.add(this.particles);
 }
 
@@ -101,6 +105,5 @@ Bloom.prototype.render = function(){
 
 	  agicsworld.renderer.clearDepth();
 	  agicsworld.camera.layers.set(0);
-	  
 
 }

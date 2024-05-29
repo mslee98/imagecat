@@ -300,8 +300,6 @@ THREE.LeapCameraControls = function(camera) {
     this.update = function(frame) {
       if (_this.enabled) {
 
-        console.log("?");
-
         _this.rotateCamera(frame);
         _this.zoomCamera(frame);
         _this.panCamera(frame);

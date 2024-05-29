@@ -16,11 +16,11 @@ function Data(){
 	
 }
 //json 좌표및 이미지 데이터 가져오기
-Data.prototype.load = function(){
+Data.prototype.load = async function() {
 				var dataApiUrl = `${config.data.url}/main/selectMainDataList.do`;
 				dataApiUrl += (paramObj.toLocal != undefined) ? "?local=Y" : (paramObj.toDev != undefined) ? "?dev=Y" : "";  
 				
-				getloadJson(dataApiUrl,function(json){
+				await getloadJson(dataApiUrl,function(json){
 					const url = JSON.parse(json);	
 					this.imgHost = url.resultMap.imgHost
 					this.uuid = url.resultMap.uuid
@@ -34,7 +34,8 @@ Data.prototype.load = function(){
 				            "layout_location.json",
 				            "centroids.json",
 				            "fileUuidInfo.json"];
-					
+
+
 					getloadJson(this.imgHost+resultuuid+configJsonData[0],function(position){
 						getloadJson(this.imgHost+resultuuid+configJsonData[1],function(atlas_dataUris){
 							getloadJson(this.imgHost+resultuuid+configJsonData[2],function(mosaics){
@@ -48,16 +49,16 @@ Data.prototype.load = function(){
 							}.bind(this))
 						}.bind(this))
 					}.bind(this))
-					
-	}.bind(this))
+
+				}.bind(this))
 
 }
 
 Data.prototype.getBackgroundImage = function(){
-	this.backgroundtex = new THREE.TextureLoader().load( "assets/images/background.jpg" ,function(texture){
+	// this.backgroundtex = new THREE.TextureLoader().load( "assets/images/background.jpg" ,function(texture){
 		
-		texture.needsUpdate = true;
-	});
+	// 	texture.needsUpdate = true;
+	// });
 	/*
 	this.playtex = new THREE.TextureLoader().load("/images/mvs/adm/art/start.png",function(texture){
 		texture.needsUpdate = true;

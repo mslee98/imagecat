@@ -205,7 +205,7 @@ function WelCome(){
 	this.loaderTextElem = getqs('#loader-text');
 	this.loaderSceneElem = getqs('#loader-scene');
 	this.buttonElem = getqs('#enter');
-	this.ringElem = getqs('.lds-ring');
+	this.ringElem = getqs('.lds-ring'); // 로딩 엘리먼트 ".ids-ring"임
 	this.hotspotdiv = getqs('#mySidenav');
 	this.worldtransition = true;
 	this.start = true;
@@ -216,14 +216,14 @@ function WelCome(){
 WelCome.prototype.onScroll = function(e){
 	var c = document.querySelector('.closebtn')
 	c.style.top = (e.target.scrollTop)+"px"
-	
-	console.log(e);
 }
 
 
+/**
+ * 이미지캣 초기화면 Strat버튼 이벤트
+ * @function() AgicsWorld.prototype.startWorld() 호출한다.
+ */
 WelCome.prototype.onButtonClick = function(e){
-	
-	
 	if(e.target.className.indexOf('active') > -1){
 		requestAnimationFrame(function(){
 			this.removeLoader(function(){
@@ -244,19 +244,25 @@ WelCome.prototype.removeLoader = function(onSuccess){
 	
 }
 
-WelCome.prototype.updateProgress = function (){
-	var progress = getValueSum(data.textureProgress)/data.textureCount;
-	
+WelCome.prototype.updateProgress = function () {
+	var progress = getValueSum(data.textureProgress) / data.textureCount;
+  
 	progress = progress.toString();
-	var index = progress.indexOf('.');
-	if (index > -1) progress = progress.substring(0,index);
-	
-	this.progressElem.textContent = progress +'%';
+	var index = progress.indexOf(".");
+	if (index > -1) progress = progress.substring(0, index);
+  
+	this.progressElem.textContent = progress + "%";
 	//data.textureCount 뒤에 heightmap 완료 변수도 넣을예정
-	if(progress ==100 && data.loadedTextures == data.textureCount ){
-		this.buttonElem.className += ' active';
+	if (progress == 100 && data.loadedTextures == data.textureCount) {
+	  var enterBtn = document.querySelector("#enter");
+  
+	  this.buttonElem.className += " active";
+	  enterBtn.style.cursor = "pointer";
+	  enterBtn.classList.add("on");
+	  enterBtn.style.backgroundImage =
+		"linear-gradient(to bottom, #017bfd 0%, #20bfe1 100%)";
 	}
-}
+  };
 
 WelCome.prototype.startWorld = function(){
 	if(this.start){
@@ -269,18 +275,27 @@ WelCome.prototype.startWorld = function(){
 			      requestAnimationFrame(function() {
 			        document.querySelector('#loader-scene').classList += 'hidden';
 
+					// FPS 측정을 위한 변수임
+				    agicsworld.startTime = performance.now();
+					
+					// 어딘가에서 애니메이션 동작하는것 같음
+					// new TimelineMax().to(
+					// 	".popup_container", 0, {y: "-110%"}
+					// )
+
 			      }.bind(this))
 			
 				  //그룹화 하기 위한 투명값 낮추기
 				  //actioneffect.setActionState();
 				  //actioneffect.render();
+
+
+				  // 이 부분이 처음 파티클 지정하는곳
 				  layoutinfo.selected="logo";
 			      layoutinfo.transitiontype();
 			    }.bind(this), 1500)
 		}.bind(this))
 	}
-	
-
 }
 
 
@@ -298,8 +313,7 @@ Adventure.prototype.init = function(){
 	var inner = ""
 
 	for (i =0 ; i<data.centroids.centroids.length;i++){
-		inner += " <div id='hotspot'><a> ＊ "+data.centroids.centroids[i].label+"</a></div>"
-	
+		inner += ` <div id='hotspot' class=${i+1} class=><a> ${i+1} `+data.centroids.centroids[i].label+"</a></div>"
 	}
 	this.target.innerHTML = inner;
 	var hotspots = getqsall('#hotspot')
@@ -307,12 +321,21 @@ Adventure.prototype.init = function(){
 	for (var i=0;i<hotspots.length ; i++){
 
 		hotspots[i].addEventListener('click',function(idx){
+			agicsworld.scenarioIndex = idx+1;
 			//search가 진행중일때 worldtour할경우
+
 			if(search.state.serching){
 				agicsworld.moveCellIdx(-7,false);
 				layoutinfo.transitiontype();
 			}else{
+				agicsworld.layoutCheck = true;
+				const popup_container = document.querySelector(".popup_container");
+				
+				popup_container.style.display = 'none';
+				popup.slideClear();
+
 				agicsworld.moveCellIdx(data.centroids.centroids[idx].idx,true);
+				agicsworld.layoutCheck = false;
 			}
 			
 		}.bind(this,i))
@@ -375,6 +398,9 @@ Keyboard.prototype.commandPressed = function() {
 
 
 new params(); 
+
+
+
 var welcome = new WelCome();
 var webgl = new Webgl();
 var config = new Config();
